@@ -5,10 +5,25 @@
 
 *{
   box-sizing: border-box;
-  
+  font-family: Inter var, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 :root{
   margin: 0;
   padding: 0;
   
+}
+
+.hash-span{
+  margin-top:-100px;
+  padding-bottom: 100px;
+  display: block;
+}
+
+.pattern{
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.menu{
+  filter:drop-shadow(1px 1px 1px #272e2e);
 }
