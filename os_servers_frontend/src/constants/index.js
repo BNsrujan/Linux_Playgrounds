@@ -2,31 +2,6 @@ import {ubuntu,kali,mint,parrot,pop,arch_linux}  from '../assets'
 import {go,c,cplus,chas,ruby,rust,node,} from "../assets/Programming_lang"
 
 
-const navLinks = [
-    {
-        id: 'profile',
-        title:'Profile'
-    },
-    {
-        id: 'ubuntu_terminal',
-        title:'Ubuntu_terminal',
-    },
-    {
-        id:'kali_terminal',
-        title: 'kali_terminal',
-    },
-    {
-        id:'parrot_terminal',
-        title:'parrot_terminal',
-    },
-    {
-        id:'mint_terminal',
-        title:'mint_terminal',
-    }
-]
-
-
-
 const cards = [
     {
         main_img:ubuntu,
@@ -174,4 +149,4 @@ const cards = [
     },
 ]
 
-export {navLinks,cards}
+export {cards}

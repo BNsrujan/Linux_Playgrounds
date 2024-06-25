@@ -1,4 +1,6 @@
 import Nav from './nav'
-import Profile from './Profile'
+import Cards from './Home'
+import Login from './login'
+import Terminals from './Terminal'
 
-export {Nav,Profile}
+export {Nav,Cards,Login,Terminals}

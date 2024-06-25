@@ -2,6 +2,8 @@ import { SectionWraper } from "../hoc";
 import { cards } from "../constants";
 import { motion } from "framer-motion";
 import { fadeIn } from "../utils/motion";
+import { useNavigate } from "react-router-dom";
+
 const ProjectCardes = ({
   index,
   name,
@@ -10,8 +12,10 @@ const ProjectCardes = ({
   image,
   subname,
 }) => {
+const Navigate = useNavigate();
+
   return (
-    <motion.div variants={fadeIn('up', 'spring', index * 0.5, 0.75)}className="p-6 relative h-[435px] w-80 rounded-lg  shadow-xl text-black ">
+    <motion.div  variants={fadeIn('up', 'spring', index * 0.25, 0.75)}className="p-6 relative h-[435px] w-80 rounded-lg  shadow-xl text-black ">
       <div className=" flex  items-center">
         <span className="   w-14 h-15 rounded-lg flex justify-center items-center bg-white">
           <img src={main_img} />
@@ -26,23 +30,23 @@ const ProjectCardes = ({
       </div>
 
       <div className=" mt-4 gap-3 flex flex-wrap ">
-        {image.map((image) => (
-          <p className="flexbg-white text-black h-8 flex bg-white  rounded-xl px-2 py-1  border border-black-200  shadow-sm justify-around items-center  text-sm ">
+        {image.map((image,index) => (
+          <p key={index} className="flexbg-white text-black h-8 flex bg-white  rounded-xl px-2 py-1  border border-black-200  shadow-sm justify-around items-center  text-sm ">
             <img src={image.img} width="30px" className="px-1"/>
             {image.img_name}
           </p>
         ))}
       </div>
-      <button className=" menu bg-black text-white  border-b-0  absolute bottom-8 right-8 rounded-full px-3  py-2">
+      <button onClick={()=>{Navigate(`/terminal/${name}`)}} className=" menu bg-black text-white  border-b-0  absolute bottom-8 right-8 rounded-full px-3  py-2">
         Terminal
       </button>
     </motion.div>
   );
 };
 
-const Profile = () => {
+const Cards = () => {
   return (
-    <motion.div className="relative flex flex-wrap gap-7 ">
+    <motion.div className="relative flex flex-wrap gap-7  justify-center ">
       {cards.map((cards, index) => (
         <ProjectCardes key={`card-${index}`} index={index} {...cards} />
       ))}
@@ -50,4 +54,4 @@ const Profile = () => {
   );
 };
 
-export default SectionWraper(Profile, "");
+export default SectionWraper(Cards, "");

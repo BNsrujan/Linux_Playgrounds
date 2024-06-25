@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@xterm/xterm": "^5.5.0",
     "autoprefixer": "^10.4.19",
     "framer-motion": "^11.2.11",
     "postcss": "^8.4.38",

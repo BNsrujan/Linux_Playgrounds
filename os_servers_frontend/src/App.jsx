@@ -1,20 +1,25 @@
-import React from 'react'
-import {Nav,Profile} from './components'
-import {BrowserRouter}from "react-router-dom"
-import {styles}from './style'
+import React from "react";
+import { Nav, Cards, Login, Terminals } from "./components";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 
-
-const  App = () => {
+const App = () => {
   return (
-    <BrowserRouter>
-    <div className='relative  bg-white '>
-      <Nav className=" fixed z-10  "/>
-      <Profile className=" bg-primary"/>
-    
+    <Router>
+      <div className="relative bg-white">
+        <ConditionalNav />
+        <Routes>
+          <Route path="/" element={<Cards className="bg-primary" />} />
+          <Route path="/login" element={<Login className="  flex justify-center items-center" />} />
+          <Route path="/terminal/:os" element={<Terminals />} />
+        </Routes>
       </div>
-  
-  </BrowserRouter>
-  )
-}
+    </Router>
+  );
+};
 
-export default App
+const ConditionalNav = () => {
+  const location = useLocation();
+  return location.pathname === '/' ? <Nav className="fixed z-10" /> : null;
+};
+
+export default App;
