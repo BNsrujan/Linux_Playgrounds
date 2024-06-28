@@ -4,10 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary:'#eff3ff'
+        primary:'#eff3ff',
+       
+        
       },
       backgroundImage:{
         "bg-card":"url('/src/assets/download.svg')"
+    },
+    
+    boxShadow :{
+      boxShadows : " 3px 10px 20px 0px rgba(35, 100, 210, 0.3)"
     }
     },
   },

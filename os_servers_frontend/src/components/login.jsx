@@ -1,6 +1,5 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const CLIENT_ID = "Ov23liD3eIcND845yFNY";
 
@@ -99,8 +98,6 @@ const Login = () => {
             Login with GitHub
           </button>
           </div>
-
-          
         </>
       )}
     </>

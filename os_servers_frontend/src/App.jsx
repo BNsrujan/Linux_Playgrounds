@@ -5,11 +5,11 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from "react-route
 const App = () => {
   return (
     <Router>
-      <div className="relative bg-white">
+      <div className="relative bg-sky-50">
         <ConditionalNav />
         <Routes>
-          <Route path="/" element={<Cards className="bg-primary" />} />
           <Route path="/login" element={<Login className="  flex justify-center items-center" />} />
+          <Route path="/" element={<Cards className="bg-primary" />} />
           <Route path="/terminal/:os" element={<Terminals />} />
         </Routes>
       </div>
