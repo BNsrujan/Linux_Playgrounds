@@ -7,5 +7,7 @@ import parrot from './parrot.png'
 import pop from "./pop.png"
 import arch_linux from "./arch-linux.svg"
 
-export {terminal,user,ubuntu,kali,mint,parrot,pop,arch_linux}
+import git from "./git.svg"
+
+export {terminal,user,ubuntu,kali,mint,parrot,pop,arch_linux,git}
 
