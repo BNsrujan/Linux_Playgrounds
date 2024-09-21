@@ -1,8 +1,10 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap");
+
 
 *,
 ::before,
@@ -15,33 +17,38 @@
   font-weight: 400;
   font-style: normal;
 }
-*{
+
+* {
   box-sizing: border-box;
- 
-}
-:root{
-  margin: 0;
-  padding: 0;
-  
+
 }
 
-.hash-span{
-  margin-top:-100px;
+:root {
+  margin: 0;
+  padding: 0;
+
+}
+
+.hash-span {
+  margin-top: -100px;
   padding-bottom: 100px;
   display: block;
 }
 
-.pattern{
+.pattern {
   backdrop-filter: saturate(180%) blur(20px);
 }
 
-.menu{
-  filter:drop-shadow(1px 1px 1px #272e2e);
+.menu {
+  filter: drop-shadow(1px 1px 1px #272e2e);
   background: linear-gradient(0deg, rgb(85, 7, 212) 0%, rgb(114, 1, 213) 100%);
 }
-.menu:hover{
+
+.menu:hover {
   background: linear-gradient(0deg, rgb(94, 9, 233) 0%, rgb(124, 6, 227) 100%);
 }
-.borders:hover{
-  border: rgb(96, 9, 240);;
+
+.borders:hover {
+  border: rgb(96, 9, 240);
+  ;
 }
