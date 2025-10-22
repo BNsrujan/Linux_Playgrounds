@@ -1,98 +1,110 @@
-import { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Terminal } from '@xterm/xterm';
-import '@xterm/xterm/css/xterm.css';
+import { useEffect, useRef } from "react";
+import "@xterm/xterm/css/xterm.css";
+import { Terminal } from "@xterm/xterm";
+import { useParams } from "react-router-dom";
+import zorin from "../constants/neofetch";
+import axios from "axios";
+import { FitAddon } from '@xterm/addon-fit';
 
-const Terminals = () => {
+
+function Terminals() {
   const terminalRef = useRef(null);
-  const params = useParams();
+  
+  const param = useParams();
+  
+useEffect(() => {
+  const term = new Terminal({
+    cursorBlink: true,
+    cursorStyle: "bar",
+    theme: {
+      background: "#1e1f1e",
+      foreground: "#ffffff",
+      cursor: "#ffffff",
+    },
+    rows:64,
+    fontSize: 14,
+    fontFamily: "Ubuntu Mono, monospace",
+    scrollOnUserInput: true,
+  });
 
-  useEffect(() => {
-    const term = new Terminal({
-      cursorBlink: true,
-      cursorStyle: 'block',
-      convertEol: true,
-      fontFamily: '"Ubuntu Mono", "DejaVu Sans "',
-      fontSize: 14,
-      lineHeight: 1.2,
-      windowsMode: true,
-      scrollOnUserInput:true,
-      
-      rescaleOverlappingGlyphs:true,
-      theme: {
-        background: '#000000',
-        foreground: '#ffffff',
-        cursor: '#ffffff',
-        green: '#00ff00',
-      },
-      rows:59,
-      cols:120,
-      letterSpacing:3,
-    });
-    
-    term.open(terminalRef.current);
-    term.focus();
+  const fitAddon = new FitAddon();
+  term.loadAddon(fitAddon);
+  term.open(terminalRef.current);
+  fitAddon.fit();
+  term.focus();
 
-    // Ubuntu ASCII logo
-    const ubuntuLogo = `
-            _                         _ 
-           | |                       | |
- _   _ _ __| |__   ___  _   _ _ __ __| |
-| | | | '__| '_ \\ / _ \\| | | | '__/ _\` |
-| |_| | |  | |_) | (_) | |_| | | | (_| |
- \\__,_|_|  |_.__/ \\___/ \\__,_|_|  \\__,_|
-                                         
-`;
+  term.write(zorin);
+  term.write(`\r\n${param.os}@ubuntu: $ `);
 
-    const sysInfo = `
-${params.os || 'user'}@ubuntu
------------------------------
-OS: Ubuntu 22.04 LTS x86_64
-Host: QEMU / Standard PC (i440FX + PIIX, 1996)
-Kernel: 6.2.0-39-generic
-Uptime: 12 mins
-Packages: 1876 (apt)
-Shell: bash 5.1
-Resolution: 1920x1080
-WM: GNOME
-Theme: Yaru-dark
-Icons: Yaru
-Terminal: xterm
-CPU: Intel i5-9400F (6) @ 2.90GHz
-GPU: NVIDIA GTX 1050 Ti
-Memory: 842MiB / 3950MiB
+  let currentInput = "";
 
-${params.os || 'user'}@ubuntu:~$ 
-`;
+  const resizeObserver = new ResizeObserver(() => {
+    fitAddon.fit();
+  });
 
-    // Print with typing animation
-    const fullOutput = ubuntuLogo + sysInfo;
-    let i = 0;
-    const interval = setInterval(() => {
-      term.write(fullOutput[i]);
-      i++;
-      if (i >= fullOutput.length) clearInterval(interval);
-    }, 5);
+  resizeObserver.observe(terminalRef.current);
 
-    term.onData((data) => {
-      if (data === '\r') {
-        term.write('\r\n' + `${params.os || 'user'}@ubuntu:~$ `);
-      } else {
-        term.write(data);
+  term.onData(async (data) => {
+    if (data === "\r") {
+      term.write("\r\n");
+
+      if (!currentInput.trim()) {
+        term.write(`${param.os}@ubuntu: $ `);
+        return;
       }
-    });
+      if(currentInput == "clear"){
+        term.clear();
+        term.write(zorin);
+        term.write(`\r\n${param.os}@ubuntu: $ `);
+        return;
+      }
+      if(currentInput == "exit"){
+        term.dispose();
+        return;
+      }
 
-    return () => term.dispose();
-  }, [params.os]);
+      try {
+        const res = await axios.post("http://localhost:5000/api/termincal", {
+          command: currentInput,
+          os: param.os,
+        });
+        term.write(res.data.output || res.data || "Command executed successfully");
+      } catch (err) {
+        term.write(`Error: ${err.message}`);
+      }
+
+      currentInput = "";
+      term.write(`\r\n${param.os}@ubuntu: $ `);
+      return;
+    }
+
+    if (data === "\x7f") {
+      if (currentInput.length > 0) {
+        currentInput = currentInput.slice(0, -1);
+        term.write("\b \b");
+      }
+      return;
+    }
+
+    currentInput += data;
+    term.write(data);
+  });
+
+  return () => {
+    resizeObserver.disconnect();
+    term.dispose();
+  };
+}, [param.os]);
+
 
   return (
     <div
+      className="terminal xterm xterm-container h-full w-full"
       ref={terminalRef}
-      className="xterm-container xterm terminal w-full h-full"
     >
-      
+    
     </div>
   );
-};
+}
 
 export default Terminals;

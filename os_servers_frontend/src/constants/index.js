@@ -5,7 +5,7 @@ import {go,c,cplus,chas,ruby,rust,node,} from "../assets/Programming_lang"
 const cards = [
     {
         main_img:ubuntu,
-        name:"Ubuntu",
+        name:"ubuntu",
         subname:"Terminal",
         description:"Ubuntu is a Linux distribution derived from Debian and composed mostly of free and open-source software. Ubuntu is officially released in multiple editions: Desktop, Server, and Core for Internet of things devices and robots.",
         image:[
