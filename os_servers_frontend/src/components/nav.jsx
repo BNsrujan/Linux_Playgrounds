@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { styles } from '../style';
 import { terminal, user } from '../assets';
 import { Link, useNavigate } from 'react-router-dom';

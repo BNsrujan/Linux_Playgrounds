@@ -1,4 +1,4 @@
-import { SectionWraper } from "../hoc";
+import { SectionWrapper } from "../hoc";
 import { cards } from "../constants";
 import { motion } from "framer-motion";
 import { fadeIn } from "../utils/motion";
@@ -52,7 +52,7 @@ const Navigate = useNavigate();
 
 const Cards = () => {
   return (
-    <motion.div className="relative flex flex-wrap gap-7  justify-center ">
+    <motion.div className="relative flex flex-wrap gap-7 justify-center">
       {cards.map((cards, index) => (
         <ProjectCardes key={`card-${index}`} index={index} {...cards} />
       ))}
@@ -60,4 +60,4 @@ const Cards = () => {
   );
 };
 
-export default SectionWraper(Cards, "");
+export default SectionWrapper(Cards, "");
