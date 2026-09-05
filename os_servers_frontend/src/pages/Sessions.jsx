@@ -2,13 +2,29 @@ import { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
-import { Button, Label, Notice, Panel, StatusTag } from "../components/Primitives";
+import {
+  Button,
+  Card,
+  DistroMark,
+  EmptyState,
+  Notice,
+  Spinner,
+  Stat,
+  StatusPill,
+} from "../components/Primitives";
 import { api, errorMessage } from "../api/client";
+
+const ACCENTS = {
+  ubuntu: "#E95420",
+  debian: "#A81D33",
+  alpine: "#0D597F",
+  fedora: "#3C6EB4",
+  arch: "#1793D1",
+};
 
 const formatWhen = (value) => {
   if (!value) return "—";
-  const elapsed = Date.now() - new Date(value).getTime();
-  const minutes = Math.round(elapsed / 60000);
+  const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60000);
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
@@ -16,58 +32,57 @@ const formatWhen = (value) => {
   return `${Math.round(hours / 24)}d ago`;
 };
 
-const LimitsBar = ({ limits }) => (
-  <dl className="grid grid-cols-2 gap-px border border-hairline bg-hairline sm:grid-cols-5">
-    {[
-      ["Memory", `${limits.memoryMb} MB`],
-      ["CPU", `${limits.cpus} core`],
-      ["Network", limits.network],
-      ["Idle cutoff", `${limits.idleTimeoutMinutes} min`],
-      ["Max active", limits.maxSessionsPerUser],
-    ].map(([label, value]) => (
-      <div key={label} className="bg-panel px-4 py-3">
-        <Label>{label}</Label>
-        <dd className="mt-1 text-xs text-ink">{value}</dd>
-      </div>
-    ))}
-  </dl>
-);
-
-LimitsBar.propTypes = { limits: PropTypes.object.isRequired };
-
 const SessionRow = ({ session, onStop, onResume, busy }) => {
   const active = session.status === "running" || session.status === "starting";
 
   return (
-    <tr className="border-t border-hairline">
-      <td className="px-4 py-3">
-        <div className="text-xs font-medium uppercase">{session.distroSlug}</div>
-        <div className="text-[11px] text-ink-faint">{session.id.slice(-8)}</div>
+    <tr className="border-t border-border transition-colors hover:bg-surface-2/60">
+      <td className="px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <DistroMark
+            name={session.distroSlug}
+            accent={ACCENTS[session.distroSlug] || "#64748B"}
+            size="sm"
+          />
+          <div className="min-w-0">
+            <div className="text-[13px] font-medium capitalize text-text">
+              {session.distroSlug}
+            </div>
+            <div className="mono text-[11px] text-text-faint">{session.id.slice(-8)}</div>
+          </div>
+        </div>
       </td>
-      <td className="px-4 py-3">
-        <StatusTag status={session.status} />
+      <td className="px-5 py-3.5">
+        <StatusPill status={session.status} />
         {session.errorMessage ? (
-          <div className="mt-1 text-[11px] text-danger">{session.errorMessage}</div>
+          <div className="mt-1 max-w-[220px] text-[11px] text-danger">{session.errorMessage}</div>
         ) : null}
       </td>
-      <td className="px-4 py-3 text-xs text-ink-muted">{session.commandCount}</td>
-      <td className="px-4 py-3 text-xs text-ink-muted">{formatWhen(session.createdAt)}</td>
-      <td className="px-4 py-3 text-xs text-ink-muted">{formatWhen(session.lastActiveAt)}</td>
-      <td className="px-4 py-3 text-right">
-        {active ? (
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => onResume(session.id)}>
-              Attach
+      <td className="mono px-5 py-3.5 text-[13px] text-text-muted">{session.commandCount}</td>
+      <td className="px-5 py-3.5 text-[13px] text-text-muted">{formatWhen(session.createdAt)}</td>
+      <td className="px-5 py-3.5 text-[13px] text-text-muted">{formatWhen(session.lastActiveAt)}</td>
+      <td className="px-5 py-3.5">
+        <div className="flex justify-end gap-2">
+          {active ? (
+            <>
+              <Button size="sm" variant="secondary" onClick={() => onResume(session.id)}>
+                Attach
+              </Button>
+              <Button size="sm" variant="danger" onClick={() => onStop(session.id)} disabled={busy}>
+                Stop
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => onResume(session.distroSlug, true)}
+            >
+              Relaunch
             </Button>
-            <Button variant="danger" onClick={() => onStop(session.id)} disabled={busy}>
-              Stop
-            </Button>
-          </div>
-        ) : (
-          <Button variant="ghost" onClick={() => onResume(session.distroSlug, true)}>
-            Relaunch
-          </Button>
-        )}
+          )}
+        </div>
       </td>
     </tr>
   );
@@ -96,7 +111,7 @@ const Sessions = () => {
       setLimits(sessionData.limits);
       setHistory(commands);
     } catch (loadError) {
-      setError(errorMessage(loadError, "Could not load sessions"));
+      setError(errorMessage(loadError, "Could not load your sessions"));
     } finally {
       setLoading(false);
     }
@@ -135,102 +150,111 @@ const Sessions = () => {
     }
   };
 
-  const activeCount = sessions.filter((s) => s.status === "running" || s.status === "starting").length;
-
   return (
-    <AppShell>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-hairline pb-6">
-        <div>
-          <Label>Control</Label>
-          <h1 className="mt-2 text-2xl font-bold">Your sandboxes</h1>
-          <p className="prose-ui mt-2 max-w-xl text-xs text-ink-muted">
-            Containers stay alive between commands and are reaped once they go idle. Stopping one
-            deletes its filesystem for good.
-          </p>
+    <AppShell
+      title="Sessions"
+      subtitle="Containers stay alive between commands and are reaped once idle"
+      actions={
+        <Link to="/distros">
+          <Button size="sm">New sandbox</Button>
+        </Link>
+      }
+    >
+      {error ? (
+        <div className="mb-5">
+          <Notice>{error}</Notice>
         </div>
-        <div className="text-right">
-          <Label>Active now</Label>
-          <div className="text-2xl font-bold text-accent">{activeCount}</div>
+      ) : null}
+
+      {limits ? (
+        <Card className="mb-5 grid grid-cols-2 divide-x divide-y divide-border sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
+          <Stat label="Memory" value={`${limits.memoryMb} MB`} />
+          <Stat label="CPU" value={`${limits.cpus} core`} />
+          <Stat label="Network" value={limits.network} />
+          <Stat label="Idle cutoff" value={`${limits.idleTimeoutMinutes} min`} />
+          <Stat label="Max active" value={limits.maxSessionsPerUser} accent />
+        </Card>
+      ) : null}
+
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead>
+              <tr className="bg-surface-2/70">
+                {["Sandbox", "Status", "Commands", "Started", "Last active", ""].map((heading) => (
+                  <th
+                    key={heading}
+                    className="px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-text-faint"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="flex items-center justify-center gap-2 py-14 text-[13px] text-text-faint">
+                      <Spinner />
+                      Loading sessions
+                    </div>
+                  </td>
+                </tr>
+              ) : sessions.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState title="No sandboxes yet">
+                      <Link to="/distros" className="text-accent hover:underline">
+                        Launch your first one
+                      </Link>{" "}
+                      from the catalog.
+                    </EmptyState>
+                  </td>
+                </tr>
+              ) : (
+                sessions.map((session) => (
+                  <SessionRow
+                    key={session.id}
+                    session={session}
+                    onStop={handleStop}
+                    onResume={handleResume}
+                    busy={busy}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </Card>
 
-      <Notice>{error}</Notice>
-
-      {limits ? <LimitsBar limits={limits} /> : null}
-
-      <Panel className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left">
-          <thead>
-            <tr className="bg-raised">
-              {["Distro", "Status", "Commands", "Started", "Last active", ""].map((heading) => (
-                <th key={heading} className="px-4 py-3 text-[10px] uppercase tracking-label text-ink-faint">
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-xs text-ink-faint">
-                  Loading sessions…
-                </td>
-              </tr>
-            ) : sessions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-xs text-ink-faint">
-                  No sandboxes yet.{" "}
-                  <Link to="/distros" className="text-accent hover:underline">
-                    Launch one
-                  </Link>
-                  .
-                </td>
-              </tr>
-            ) : (
-              sessions.map((session) => (
-                <SessionRow
-                  key={session.id}
-                  session={session}
-                  onStop={handleStop}
-                  onResume={handleResume}
-                  busy={busy}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </Panel>
-
-      <div className="mt-10">
-        <Label>Recent commands</Label>
-        <Panel className="mt-3">
+      <section className="mt-8">
+        <h2 className="mb-3 text-[13px] font-semibold tracking-tight text-text">Recent commands</h2>
+        <Card className="overflow-hidden">
           {history.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-ink-faint">
-              Commands you run show up here.
-            </p>
+            <EmptyState title="Nothing run yet">
+              Commands you type in a sandbox show up here.
+            </EmptyState>
           ) : (
-            <ul>
+            <ul className="divide-y divide-border">
               {history.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="flex items-center gap-4 border-b border-hairline px-4 py-2 last:border-b-0"
-                >
-                  <span className="w-16 shrink-0 text-[10px] uppercase tracking-label text-ink-faint">
+                <li key={entry.id} className="flex items-center gap-4 px-5 py-2.5">
+                  <span className="w-16 shrink-0 text-[11px] capitalize text-text-faint">
                     {entry.distroSlug}
                   </span>
-                  <code className="min-w-0 flex-1 truncate text-xs text-ink">
+                  <code className="mono min-w-0 flex-1 truncate text-[12.5px] text-text">
                     <span className="text-accent">$ </span>
                     {entry.command}
                   </code>
-                  <span className="shrink-0 text-[11px] text-ink-faint">
+                  <span className="shrink-0 text-[11px] text-text-faint">
                     {formatWhen(entry.createdAt)}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </Panel>
-      </div>
+        </Card>
+      </section>
     </AppShell>
   );
 };

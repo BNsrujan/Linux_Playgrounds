@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell } from "../components/AppShell";
-import { Button, Notice } from "../components/Primitives";
+import { Button, Notice, Spinner } from "../components/Primitives";
 import { useAuth } from "../auth/authContext";
 
 const OAuthCallback = () => {
@@ -28,16 +28,23 @@ const OAuthCallback = () => {
 
   return (
     <AuthShell
-      title={error ? "Sign-in failed" : "Completing sign-in"}
-      subtitle={error ? "GitHub could not finish authenticating you." : "Exchanging your GitHub session…"}
+      title={error ? "Sign-in failed" : "Finishing sign-in"}
+      subtitle={
+        error ? "GitHub could not finish authenticating you." : "Exchanging your GitHub session."
+      }
     >
-      <Notice>{error}</Notice>
       {error ? (
-        <Button className="mt-6 w-full" onClick={() => navigate("/login", { replace: true })}>
-          Back to sign in
-        </Button>
+        <>
+          <Notice>{error}</Notice>
+          <Button size="lg" className="mt-5 w-full" onClick={() => navigate("/login", { replace: true })}>
+            Back to sign in
+          </Button>
+        </>
       ) : (
-        <p className="text-xs text-ink-faint">One moment.</p>
+        <div className="flex items-center gap-2 text-[13px] text-text-muted">
+          <Spinner />
+          One moment.
+        </div>
       )}
     </AuthShell>
   );

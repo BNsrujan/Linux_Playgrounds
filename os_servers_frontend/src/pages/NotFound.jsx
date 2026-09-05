@@ -3,9 +3,11 @@ import { AuthShell } from "../components/AppShell";
 import { Button } from "../components/Primitives";
 
 const NotFound = () => (
-  <AuthShell title="404" subtitle="That route does not exist in this playground.">
+  <AuthShell title="Page not found" subtitle="That route does not exist in this playground.">
     <Link to="/distros">
-      <Button className="w-full">Back to the catalog</Button>
+      <Button size="lg" className="w-full">
+        Back to the catalog
+      </Button>
     </Link>
   </AuthShell>
 );

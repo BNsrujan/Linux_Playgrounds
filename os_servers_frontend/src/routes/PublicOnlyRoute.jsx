@@ -7,8 +7,9 @@ const PublicOnlyRoute = ({ children }) => {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-full items-center justify-center text-xs text-ink-faint">
-        Checking your session…
+      <div className="flex min-h-full items-center justify-center gap-2 text-[13px] text-text-muted">
+        <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        Checking your session
       </div>
     );
   }

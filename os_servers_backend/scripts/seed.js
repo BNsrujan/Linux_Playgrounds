@@ -70,6 +70,41 @@ const commandsByDistro = {
 
 const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000);
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "mongo", "host.docker.internal"]);
+
+const describeTarget = (uri) => {
+  const withoutScheme = uri.replace(/^mongodb(\+srv)?:\/\//, "");
+  const authority = withoutScheme.split("/")[0].split("@").pop();
+  const hosts = authority.split(",").map((entry) => entry.split(":")[0]);
+  const path = withoutScheme.split("/").slice(1).join("/").split("?")[0];
+  return {
+    hosts,
+    databaseName: path || "test",
+    isLocal: hosts.every((host) => LOCAL_HOSTS.has(host)),
+  };
+};
+
+const assertDropAllowed = (uri) => {
+  const { hosts, databaseName, isLocal } = describeTarget(uri);
+  if (isLocal || process.argv.includes("--force-remote")) return;
+
+  console.error(
+    [
+      "",
+      "Refusing to drop a database on a remote host.",
+      "",
+      `  host(s):  ${hosts.join(", ")}`,
+      `  database: ${databaseName}`,
+      "",
+      "This looks like a hosted cluster, not a local dev database.",
+      "Run `npm run seed` instead, which only replaces the seeded accounts,",
+      "or re-run with --force-remote if you really mean to drop it.",
+      "",
+    ].join("\n")
+  );
+  process.exit(1);
+};
+
 const upsertDistros = async () => {
   await Promise.all(
     distroCatalog.map((distro) =>
@@ -164,11 +199,13 @@ const createCommandLogs = async (sessions) => {
 const run = async () => {
   const shouldDrop = process.argv.includes("--drop");
 
+  if (shouldDrop) assertDropAllowed(process.env.MONGO_URI);
+
   await connectDatabase();
 
   if (shouldDrop) {
     await mongoose.connection.dropDatabase();
-    console.log("Dropped database");
+    console.log(`Dropped database ${mongoose.connection.name}`);
   }
 
   const removed = await clearSeededUserData();
@@ -177,6 +214,7 @@ const run = async () => {
   const sessions = await createSessions(users);
   const commandCount = await createCommandLogs(sessions);
 
+  console.log(`Target database:   ${mongoose.connection.name}`);
   console.log(`Removed ${removed} previously seeded user(s)`);
   console.log(`Distros upserted:  ${distroCount}`);
   console.log(`Users created:     ${Object.keys(users).length}`);

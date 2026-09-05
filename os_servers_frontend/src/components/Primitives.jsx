@@ -5,7 +5,9 @@ const BUTTON_BASE =
 
 const BUTTON_VARIANTS = {
   primary:
-    "accent-gradient text-accent-ink font-semibold shadow-[0_6px_18px_-8px_rgba(52,211,153,0.65)] hover:brightness-110 active:brightness-95",
+    "accent-gradient text-accent-ink font-semibold shadow-[0_4px_14px_-8px_rgba(52,211,153,0.5)] hover:brightness-110 active:brightness-95",
+  accent:
+    "bg-accent/10 text-accent border border-accent/25 font-medium hover:bg-accent/[0.17] hover:border-accent/45",
   secondary:
     "bg-surface-3 text-text border border-border-strong hover:bg-[#212a3a] hover:border-[#3a4759]",
   ghost: "bg-transparent text-text-muted hover:bg-surface-3 hover:text-text",
@@ -27,7 +29,7 @@ export const Button = ({ variant = "primary", size = "md", className = "", ...pr
 );
 
 Button.propTypes = {
-  variant: PropTypes.oneOf(["primary", "secondary", "ghost", "danger"]),
+  variant: PropTypes.oneOf(["primary", "accent", "secondary", "ghost", "danger"]),
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   className: PropTypes.string,
 };

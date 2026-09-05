@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell } from "../components/AppShell";
-import { Button, Field, Notice } from "../components/Primitives";
+import { Button, Field, Notice, Spinner } from "../components/Primitives";
+import GithubButton from "../components/GithubButton";
+import Divider from "../components/Divider";
 import { useAuth } from "../auth/authContext";
-import { errorMessage, githubSignInUrl } from "../api/client";
+import { errorMessage } from "../api/client";
 
 const Login = () => {
   const { signIn } = useAuth();
@@ -30,19 +32,20 @@ const Login = () => {
 
   return (
     <AuthShell
-      title="Sign in"
+      title="Welcome back"
       subtitle="Pick a distro and get a real shell in seconds."
       footer={
         <>
           No account yet?{" "}
-          <Link to="/register" className="text-accent hover:underline">
+          <Link to="/register" className="font-medium text-accent hover:underline">
             Create one
           </Link>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
+          id="email"
           label="Email"
           type="email"
           value={form.email}
@@ -52,6 +55,7 @@ const Login = () => {
           required
         />
         <Field
+          id="password"
           label="Password"
           type="password"
           value={form.password}
@@ -61,26 +65,14 @@ const Login = () => {
           required
         />
         <Notice>{error}</Notice>
-        <Button type="submit" disabled={busy}>
-          {busy ? "Signing in…" : "Sign in"}
+        <Button type="submit" size="lg" disabled={busy} className="mt-1 w-full">
+          {busy ? <Spinner /> : null}
+          {busy ? "Signing in" : "Sign in"}
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-label text-ink-faint">
-        <span className="h-px flex-1 bg-hairline" />
-        or
-        <span className="h-px flex-1 bg-hairline" />
-      </div>
-
-      <Button
-        variant="ghost"
-        className="w-full"
-        onClick={() => {
-          window.location.href = githubSignInUrl();
-        }}
-      >
-        Continue with GitHub
-      </Button>
+      <Divider>or</Divider>
+      <GithubButton />
     </AuthShell>
   );
 };

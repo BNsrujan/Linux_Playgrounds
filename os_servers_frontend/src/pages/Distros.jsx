@@ -2,52 +2,65 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
-import { Button, DistroMark, Label, Notice, Panel } from "../components/Primitives";
+import { Button, Card, DistroMark, Notice, Spinner, Tag } from "../components/Primitives";
 import { api, errorMessage } from "../api/client";
 
-const DistroCard = ({ distro, onLaunch, launching }) => (
-  <Panel className="flex flex-col transition-colors hover:border-hairline-strong">
-    <div className="flex items-start gap-4 p-5">
-      <DistroMark name={distro.name} accent={distro.accent} size="lg" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <h2 className="truncate text-base font-bold">{distro.name}</h2>
-          <span className="text-[11px] text-ink-faint">{distro.release}</span>
+const DistroCard = ({ distro, onLaunch, launching }) => {
+  const isLaunching = launching === distro.slug;
+
+  return (
+    <Card interactive className="group flex flex-col overflow-hidden">
+      <div
+        className="h-0.5 w-full opacity-70 transition-opacity group-hover:opacity-100"
+        style={{ background: `linear-gradient(90deg, ${distro.accent}, transparent)` }}
+      />
+
+      <div className="flex items-start gap-3.5 p-5 pb-4">
+        <DistroMark name={distro.name} accent={distro.accent} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2">
+            <h2 className="truncate text-[15px] font-semibold tracking-tight text-text">
+              {distro.name}
+            </h2>
+            <span className="mono shrink-0 text-[11px] text-text-faint">{distro.release}</span>
+          </div>
+          <p className="mt-0.5 text-[13px] text-text-muted">{distro.tagline}</p>
         </div>
-        <p className="prose-ui mt-1 text-xs text-ink-muted">{distro.tagline}</p>
       </div>
-    </div>
 
-    <p className="prose-ui flex-1 px-5 text-xs leading-relaxed text-ink-muted">
-      {distro.description}
-    </p>
+      <p className="flex-1 px-5 text-[13px] leading-relaxed text-text-muted">
+        {distro.description}
+      </p>
 
-    <dl className="mt-5 grid grid-cols-2 gap-px border-y border-hairline bg-hairline">
-      <div className="bg-panel px-5 py-3">
-        <Label>Family</Label>
-        <dd className="mt-1 text-xs">{distro.family}</dd>
-      </div>
-      <div className="bg-panel px-5 py-3">
-        <Label>Packages</Label>
-        <dd className="mt-1 text-xs">{distro.packageManager}</dd>
-      </div>
-    </dl>
-
-    <div className="flex flex-wrap gap-1.5 p-5">
-      {distro.tools.map((tool) => (
-        <span key={tool} className="border border-hairline px-2 py-0.5 text-[10px] text-ink-muted">
-          {tool}
+      <div className="mt-4 flex items-center gap-4 border-y border-border px-5 py-2.5 text-[12px]">
+        <span className="text-text-faint">
+          Family <span className="ml-1 text-text-muted">{distro.family}</span>
         </span>
-      ))}
-    </div>
+        <span className="text-text-faint">
+          Packages <span className="mono ml-1 text-text-muted">{distro.packageManager}</span>
+        </span>
+      </div>
 
-    <div className="border-t border-hairline p-4">
-      <Button className="w-full" onClick={() => onLaunch(distro.slug)} disabled={Boolean(launching)}>
-        {launching === distro.slug ? "Starting sandbox…" : "Launch sandbox"}
-      </Button>
-    </div>
-  </Panel>
-);
+      <div className="flex flex-wrap gap-1.5 px-5 py-4">
+        {distro.tools.map((tool) => (
+          <Tag key={tool}>{tool}</Tag>
+        ))}
+      </div>
+
+      <div className="px-5 pb-5">
+        <Button
+          variant="accent"
+          className="w-full"
+          onClick={() => onLaunch(distro.slug)}
+          disabled={Boolean(launching)}
+        >
+          {isLaunching ? <Spinner /> : null}
+          {isLaunching ? "Starting sandbox" : "Launch sandbox"}
+        </Button>
+      </div>
+    </Card>
+  );
+};
 
 DistroCard.propTypes = {
   distro: PropTypes.shape({
@@ -65,6 +78,23 @@ DistroCard.propTypes = {
   launching: PropTypes.string,
 };
 
+const SkeletonCard = () => (
+  <Card className="h-[340px] animate-pulse opacity-50">
+    <div className="flex items-start gap-3.5 p-5">
+      <div className="h-11 w-11 rounded-lg bg-surface-3" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3.5 w-24 rounded bg-surface-3" />
+        <div className="h-3 w-40 rounded bg-surface-3" />
+      </div>
+    </div>
+    <div className="space-y-2 px-5">
+      <div className="h-3 w-full rounded bg-surface-3" />
+      <div className="h-3 w-11/12 rounded bg-surface-3" />
+      <div className="h-3 w-4/6 rounded bg-surface-3" />
+    </div>
+  </Card>
+);
+
 const Distros = () => {
   const navigate = useNavigate();
   const [distros, setDistros] = useState([]);
@@ -76,7 +106,7 @@ const Distros = () => {
     api
       .distros()
       .then(setDistros)
-      .catch((loadError) => setError(errorMessage(loadError, "Could not load distros")))
+      .catch((loadError) => setError(errorMessage(loadError, "Could not load the catalog")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -93,38 +123,25 @@ const Distros = () => {
   };
 
   return (
-    <AppShell>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-hairline pb-6">
-        <div>
-          <Label>Catalog</Label>
-          <h1 className="mt-2 text-2xl font-bold">Pick a distribution</h1>
-          <p className="prose-ui mt-2 max-w-xl text-xs text-ink-muted">
-            Each launch gives you an isolated container with a real shell. Nothing you do inside
-            reaches the host, and the sandbox is discarded when you stop it.
-          </p>
+    <AppShell title="Distributions" subtitle="Pick a sandbox to launch">
+      {error ? (
+        <div className="mb-5">
+          <Notice>{error}</Notice>
         </div>
-        <div className="text-right">
-          <Label>Available</Label>
-          <div className="text-2xl font-bold text-accent">{distros.length || "—"}</div>
-        </div>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {loading
+          ? [0, 1, 2, 3, 4, 5].map((key) => <SkeletonCard key={key} />)
+          : distros.map((distro) => (
+              <DistroCard
+                key={distro.slug}
+                distro={distro}
+                onLaunch={handleLaunch}
+                launching={launching}
+              />
+            ))}
       </div>
-
-      <Notice>{error}</Notice>
-
-      {loading ? (
-        <p className="py-16 text-center text-xs text-ink-faint">Loading catalog…</p>
-      ) : (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {distros.map((distro) => (
-            <DistroCard
-              key={distro.slug}
-              distro={distro}
-              onLaunch={handleLaunch}
-              launching={launching}
-            />
-          ))}
-        </div>
-      )}
     </AppShell>
   );
 };

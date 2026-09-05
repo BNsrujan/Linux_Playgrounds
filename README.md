@@ -73,7 +73,8 @@ network access, hard resource caps, and a short idle life.
         ├── api/client.js       Axios instance, token handling, socket URL
         ├── auth/               AuthProvider, useAuth
         ├── routes/             ProtectedRoute, PublicOnlyRoute
-        ├── components/         AppShell, AuthShell, UI primitives
+        ├── components/         AppShell (sidebar + header), AuthShell,
+        │                       Primitives, Logo, UserMenu, GithubButton
         ├── lib/terminalSocket.js
         └── pages/              Login, Register, OAuthCallback, Distros, Sessions, Terminal
 ```
@@ -242,7 +243,8 @@ cp os_servers_backend/.env.example os_servers_backend/.env
 cp os_servers_frontend/.env.example os_servers_frontend/.env
 ```
 
-Fill in `MONGO_URI` and `JWT_SECRET` at minimum. See
+Fill in `MONGO_URI` and `JWT_SECRET` at minimum. Include a database name in the URI
+(`...mongodb.net/linux_playgrounds?...`) — without one, MongoDB drivers fall back to `test`. See
 [Credentials checklist](#credentials-checklist) below. Generate a secret with:
 
 ```bash
@@ -296,8 +298,8 @@ One script covers every model: `Distro`, `User`, `Session` and `CommandLog`.
 
 | Command | Effect |
 |---|---|
-| `npm run seed` | Re-runnable. Upserts all 5 distros, deletes and recreates the 4 seed users along with their sessions and command logs. Leaves any accounts you created by hand untouched. |
-| `npm run seed:reset` | **Drops the entire database**, then seeds from scratch. |
+| `npm run seed` | Re-runnable and non-destructive. Upserts all 5 distros, deletes and recreates the 4 seed users along with their sessions and command logs. Leaves any accounts you created by hand untouched. Safe to run against any database. |
+| `npm run seed:reset` | **Drops the entire database**, then seeds from scratch. Refuses to run when `MONGO_URI` points at a non-local host, so it cannot wipe a hosted cluster by accident. Override with `node scripts/seed.js --drop --force-remote` only if you mean it. |
 
 Run both from `os_servers_backend/`. Seeded accounts:
 
