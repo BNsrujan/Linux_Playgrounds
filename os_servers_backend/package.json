@@ -1,24 +1,29 @@
 {
-  "name": "os_servers_backend",
+  "name": "linux-playgrounds-api",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "API and container orchestration for browser-based Linux distro sandboxes",
   "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+  "engines": {
+    "node": ">=20"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --drop",
+    "images:build": "node scripts/buildImages.js",
+    "images:rebuild": "node scripts/buildImages.js --force",
+    "sandboxes:clean": "node scripts/cleanupContainers.js"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dockerode": "^4.0.9",
     "dotenv": "^17.2.3",
-    "env": "^0.0.2",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.5.3"
+    "mongoose": "^8.5.3",
+    "ws": "^8.18.0"
   }
 }

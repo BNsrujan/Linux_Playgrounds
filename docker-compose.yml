@@ -1,0 +1,53 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./os_servers_backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/linux_playgrounds
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGINS: ${PUBLIC_WEB_URL:-http://localhost:8080}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:8080}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+      SANDBOX_IMAGE_PREFIX: ${SANDBOX_IMAGE_PREFIX:-linux-playgrounds}
+      SANDBOX_MEMORY_MB: ${SANDBOX_MEMORY_MB:-256}
+      SANDBOX_CPUS: ${SANDBOX_CPUS:-0.5}
+      SANDBOX_PIDS_LIMIT: ${SANDBOX_PIDS_LIMIT:-128}
+      SANDBOX_NETWORK: ${SANDBOX_NETWORK:-none}
+      SANDBOX_IDLE_TIMEOUT_MINUTES: ${SANDBOX_IDLE_TIMEOUT_MINUTES:-20}
+      SANDBOX_MAX_SESSIONS_PER_USER: ${SANDBOX_MAX_SESSIONS_PER_USER:-3}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  web:
+    build:
+      context: ./os_servers_frontend
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  mongo-data:

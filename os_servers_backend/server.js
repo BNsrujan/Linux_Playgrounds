@@ -1,76 +1,59 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const userRoutes = require("./routes/userRoutes");
-const Docker = require("dockerode");
-const docker = new Docker({ socketPath: "/var/run/docker.sock" });
-const app = express();
-const path = require("path");
+const http = require("http");
+const env = require("./config/env");
+const { createApp } = require("./app");
+const { connectDatabase } = require("./config/db");
+const { createTerminalGateway } = require("./ws/terminalGateway");
+const { pingDocker, listMissingImages } = require("./lib/docker");
+const { reapIdleSessions, shutdownAllSessions } = require("./lib/sessionService");
 
-// Middleware
-app.use(bodyParser.json());
-app.use(
-  cors({
-    origin: "*",
-    optionsSuccessStatus: 200,
-  })
-);
-
-// Routes
-app.use("/api/users", userRoutes);
-
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log(" Connected to MongoDB"))
-  .catch((err) => {
-    console.error(` MongoDB connection error: ${err.message}`);
-    process.exit(1);
-  });
-
-app.post("/api/termincal", async (req, res) => {
-  const { command, os } = req.body;
+const start = async () => {
+  await connectDatabase();
+  console.log("Connected to MongoDB");
 
   try {
-    // Step 1: Create a container
-    const container = await docker.createContainer({
-      Image: os, // Must already exist or be built
-      Cmd: ["sh", "-c", command],
-      Tty: false,
-    });
-
-    // Step 2: Start it
-    await container.start();
-
-    // Step 3: Collect output
-    const stream = await container.logs({
-      stdout: true,
-      stderr: true,
-      follow: true,
-    });
-
-    let output = "";
-
-    stream.on("data", (chunk) => {
-      output += chunk.toString();
-    });
-
-    stream.on("end", async () => {
-      await container.remove();
-      res.json({ output });
-      console.log(output);
-    });
-
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error running command");
+    await pingDocker();
+    const missing = await listMissingImages();
+    if (missing.length > 0) {
+      console.warn(
+        `Sandbox images not built yet: ${missing.join(", ")}. ` +
+          `Run "npm run images:build" or they will be built on first use.`
+      );
+    }
+  } catch (error) {
+    console.warn(`Docker is unreachable (${error.message}). Terminal sessions will fail.`);
   }
+
+  const app = createApp();
+  const httpServer = http.createServer(app);
+  const gateway = createTerminalGateway(httpServer);
+
+  const reaper = setInterval(() => {
+    reapIdleSessions()
+      .then((count) => {
+        if (count > 0) console.log(`Reaped ${count} idle sandbox(es)`);
+      })
+      .catch((error) => console.error("Reaper failed", error));
+  }, env.sandbox.reaperIntervalSeconds * 1000);
+
+  httpServer.listen(env.port, () => {
+    console.log(`API listening on http://localhost:${env.port}`);
+    console.log(`Terminal socket on ws://localhost:${env.port}/ws/terminal`);
+  });
+
+  const shutdown = async (signal) => {
+    console.log(`\n${signal} received, shutting down`);
+    clearInterval(reaper);
+    gateway.close();
+    httpServer.close();
+    await shutdownAllSessions().catch(() => {});
+    process.exit(0);
+  };
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+};
+
+start().catch((error) => {
+  console.error("Failed to start server:", error.message);
+  process.exit(1);
 });
-
-
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));

@@ -1,1 +1,0 @@
-FROM redhat/ubi8:latest-source

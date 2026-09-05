@@ -1,41 +1,65 @@
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./auth/AuthProvider";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicOnlyRoute from "./routes/PublicOnlyRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import OAuthCallback from "./pages/OAuthCallback";
+import Distros from "./pages/Distros";
+import Sessions from "./pages/Sessions";
+import TerminalPage from "./pages/Terminal";
+import NotFound from "./pages/NotFound";
 
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Nav, Profile, Terminals, Login, Register, ForgotPassword } from "./components";
-
-
-
-const App = () => {
-  return (
-    <Router>
-      <div className='relative bg-white'>
-        <Nav className="fixed z-10" />
-        <div className={`mt-12`}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/" element={<Profile className="bg-primary" />} />
-            <Route path="/terminal/:os" element={<Terminals />} />
-          </Routes>
-        </div>
-
-        {/* <div className="relative bg-sky-50">
-      <ConditionalNav />
+const App = () => (
+  <BrowserRouter>
+    <AuthProvider>
       <Routes>
-        <Route path="/login" element={<Login className="  flex justify-center items-center" />} />
-        <Route path="/" element={<Cards className="bg-primary" />} />
-        <Route path="/terminal/:os" element={<Terminals />} />
+        <Route path="/" element={<Navigate to="/distros" replace />} />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <Register />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route path="/auth/callback" element={<OAuthCallback />} />
+        <Route
+          path="/distros"
+          element={
+            <ProtectedRoute>
+              <Distros />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sessions"
+          element={
+            <ProtectedRoute>
+              <Sessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/terminal/:sessionId"
+          element={
+            <ProtectedRoute>
+              <TerminalPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
->>>>>>> origin/main */}
-      </div>
-    </Router>
-  );
-};
-
-
-const ConditionalNav = () => {
-  const location = useLocation();
-  return location.pathname === '/' ? <Nav className="fixed z-10" /> : null;
-};
+    </AuthProvider>
+  </BrowserRouter>
+);
 
 export default App;
